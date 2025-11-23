@@ -53,7 +53,7 @@ void setup() {
 // LOOP
 // --------------------
 void loop() {
-  // Simple LED blink
+  // Simple LED blink to show device alive
   digitalWrite(led, HIGH);
   delay(500);
   digitalWrite(led, LOW);
@@ -66,17 +66,17 @@ void loop() {
 void checkForUpdates() {
   Serial.println("Checking for updates...");
 
+  // Use WiFiClientSecure for HTTPS
   WiFiClientSecure client;
-  client.setInsecure(); // Skip SSL verification (required for GitHub HTTPS)
-  HTTPClient http;
+  client.setInsecure(); // skip SSL certificate verification for GitHub
 
+  HTTPClient http;
   if (!http.begin(client, VERSION_URL)) {
     Serial.println("❌ Failed to initialize HTTPClient");
     return;
   }
 
   int httpCode = http.GET();
-
   if (httpCode != 200) {
     Serial.print("❌ Error fetching version file: ");
     Serial.println(httpCode);
@@ -107,7 +107,7 @@ void checkForUpdates() {
 // --------------------
 void doOTAUpdate() {
   WiFiClientSecure client;
-  client.setInsecure(); // Skip SSL verification for firmware download
+  client.setInsecure(); // skip SSL certificate check for firmware download
 
   Serial.println("Starting OTA update...");
 
