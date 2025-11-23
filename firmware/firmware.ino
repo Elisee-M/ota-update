@@ -1,18 +1,38 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
+#include <WiFiClientSecureBearSSL.h>
 
+// --------------------
+// WiFi credentials
+// --------------------
 const char* ssid = "EdNet";
 const char* password = "Huawei@123";
 
-#define VERSION_URL  "https://raw.githubusercontent.com/Elisee-M/ota-update/main/version.txt"
-#define FIRMWARE_URL "https://raw.githubusercontent.com/Elisee-M/ota-update/main/firmware.bin"
+// --------------------
+// GitHub raw URLs
+// --------------------
+#define VERSION_URL  "https://raw.githubusercontent.com/Elisee-M/ota-update/master/version.txt"
+#define FIRMWARE_URL "https://raw.githubusercontent.com/Elisee-M/ota-update/master/firmware.bin"
 
+// --------------------
+// Current version
+// --------------------
 int currentVersion = 1;
 
+// --------------------
+// LED pin for demo
+// --------------------
+#define led D4
+
+// --------------------
+// SETUP
+// --------------------
 void setup() {
   Serial.begin(115200);
   delay(1000);
+
+  pinMode(led, OUTPUT);
 
   Serial.println("\nBooting...");
   WiFi.begin(ssid, password);
@@ -24,28 +44,32 @@ void setup() {
   }
 
   Serial.println("\nConnected!");
-  Serial.println(WiFi.localIP());
+  Serial.println("IP: " + WiFi.localIP().toString());
 
   checkForUpdates();
 }
 
+// --------------------
+// LOOP
+// --------------------
 void loop() {
-  // Your normal program here
-  delay(1000);
+  // Simple LED blink
+  digitalWrite(led, HIGH);
+  delay(500);
+  digitalWrite(led, LOW);
+  delay(500);
 }
 
-
-
-// --------------------------------------------------
-// CHECK FOR UPDATE
-// --------------------------------------------------
+// --------------------
+// CHECK FOR OTA UPDATE
+// --------------------
 void checkForUpdates() {
   Serial.println("Checking for updates...");
 
-  WiFiClient client;
+  WiFiClientSecure client;
+  client.setInsecure(); // Skip SSL verification (required for GitHub HTTPS)
   HTTPClient http;
 
-  // NEW REQUIRED FORMAT for ESP8266 core 3.x:
   if (!http.begin(client, VERSION_URL)) {
     Serial.println("❌ Failed to initialize HTTPClient");
     return;
@@ -78,21 +102,16 @@ void checkForUpdates() {
   }
 }
 
-
-
-// --------------------------------------------------
-// OTA UPDATE (NEW API FORMAT)
-// --------------------------------------------------
+// --------------------
+// OTA UPDATE
+// --------------------
 void doOTAUpdate() {
-  WiFiClient client;
+  WiFiClientSecure client;
+  client.setInsecure(); // Skip SSL verification for firmware download
 
   Serial.println("Starting OTA update...");
 
-  t_httpUpdate_return ret = ESPhttpUpdate.update(
-      client,
-      FIRMWARE_URL,
-      String(currentVersion)
-  );
+  t_httpUpdate_return ret = ESPhttpUpdate.update(client, FIRMWARE_URL, String(currentVersion));
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
