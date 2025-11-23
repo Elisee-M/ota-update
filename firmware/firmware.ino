@@ -55,9 +55,9 @@ void setup() {
 void loop() {
   // Simple LED blink to show device alive
   digitalWrite(led, HIGH);
-  delay(1000);
+  delay(2000);
   digitalWrite(led, LOW);
-  delay(1000);
+  delay(2000);
 }
 
 // --------------------
